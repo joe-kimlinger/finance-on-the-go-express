@@ -1,5 +1,21 @@
 # Finance On The Go Analytics Microservice
 
+## Getting Started
+Install the packages
+```
+npm install
+```
+
+Build the solution
+```
+npm run build
+```
+
+Run the dev server
+```
+npm run dev
+```
+The dev server will automatically refresh if any code changes are made
 ## Request
 To receive analytics for a user, query the endpoint at:
 ```
