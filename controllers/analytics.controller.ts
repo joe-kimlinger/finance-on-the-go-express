@@ -1,7 +1,7 @@
-import { QueryFailedError, TableUnique } from "typeorm";
+import { QueryFailedError } from "typeorm";
 import { AnalyticsSummary } from "../classes/analytics_summary";
 import { UserRelationshipSummary } from "../classes/user_relationship_summary";
-import { Transaction, User } from "../models";
+import { Transaction } from "../models";
 import {
     getTransactions,
 } from "../repositories/transaction.repository";
@@ -14,11 +14,13 @@ export default class AnalyticsController {
             return new Error(`There was an error querying transactions for user ${userId} between dates ${startDate} and ${endDate}.`)
         else if (transactions.length < 1)
             return new Error(`No transactions found for user ${userId} between dates ${startDate} and ${endDate}.`)
+        else if (transactions instanceof Error)
+            return new Error("An error occurred.")
         else 
-            return this.computeAnalytics(transactions as Transaction[], userId)
+            return this.computeAnalytics(transactions as Transaction[])
     }
 
-    private computeAnalytics(transactions: Transaction[], userId: number): AnalyticsSummary {
+    private computeAnalytics(transactions: Transaction[]): AnalyticsSummary | Error {
         let interactionMap = new Map<number, UserRelationshipSummary>();
         let analyticsSummary = new AnalyticsSummary();
         
@@ -26,32 +28,38 @@ export default class AnalyticsController {
         for (let i: number = 0; i < transactions.length; i++){
             let totalSent = 0;
             let totalReceived = 0;
-            let otherUser: User;
-            if (transactions[i].sender.id == userId) {
-                otherUser = transactions[i].receiver;
-                totalSent = transactions[i].transactionAmount;
+            let totalSaved = 0;
+
+            if (transactions[i].action == 'send') {
+                totalSent = transactions[i].amount;
+            }
+            else if (transactions[i].action == 'receive') {
+                totalReceived = transactions[i].amount;
+            }
+            else if (transactions[i].action == 'save') {
+                totalSaved = transactions[i].amount;
             }
             else {
-                otherUser = transactions[i].sender;
-                totalReceived = transactions[i].transactionAmount;
+                return new Error(`Unrecognized transaction type ${transactions[i].action}`);
             }
 
             analyticsSummary.totalSent += totalSent;
             analyticsSummary.totalReceived += totalReceived;
-            analyticsSummary.totalTransacted += totalSent + totalReceived;
+            analyticsSummary.totalSaved += totalSaved;
+            analyticsSummary.totalTransacted += totalSent + totalReceived + totalSaved;
 
             let interaction: UserRelationshipSummary;
-            if (interactionMap.has(otherUser.id)){
-                interaction = interactionMap.get(otherUser.id);
+            if (interactionMap.has(transactions[i].sender.userId)){
+                interaction = interactionMap.get(transactions[i].sender.userId);
             }
             else {
                 interaction = new UserRelationshipSummary();
-                interaction.user = otherUser;
+                interaction.user = transactions[i].sender;
             }
             interaction.sentTo += totalSent;
             interaction.receivedFrom += totalReceived;
             interaction.transactionCount++;
-            interactionMap.set(otherUser.id, interaction)
+            interactionMap.set(transactions[i].sender.userId, interaction)
         }
 
         // Determine sponsor, sponsee, and best friends

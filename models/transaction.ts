@@ -1,34 +1,43 @@
 import {
     Entity,
-    PrimaryGeneratedColumn,
     Column,
     CreateDateColumn,
     UpdateDateColumn,
     ManyToOne,
-    JoinColumn,
+    OneToMany,
+    PrimaryColumn
   } from "typeorm";
-import { TransactionStatus } from "../classes/transaction_status_enum";
 import { User } from "./user";
   
 @Entity()
 export class Transaction {
-    @PrimaryGeneratedColumn()
-    id!: number;
+    @Column('uuid', {nullable: false, unique: true})
+    @PrimaryColumn()
+    id!: string;
 
-    @ManyToOne(() => User, user => user.sentTransactions)
-    sender!: User;
+    @ManyToOne(() => User, user => user.userId, { cascade: true })
+    UserId!: User;
 
-    @ManyToOne(() => User, user => user.receivedTransactions)
-    receiver!: User;
+    @Column()
+    debitOrCredit!: string;
 
-    @Column('float', {nullable: false})
-    transactionAmount!: number;
+    @Column()
+    currency!: string;
 
-    @Column('int', {nullable: false})
-    transactionStatus!: TransactionStatus;
+    @Column()
+    action!: string;
 
-    @Column('timestamp', {nullable: false})
-    transactionDate!: Date;
+    @Column()
+    amount!: number;
+
+    @Column()
+    status!: string;
+
+    @Column()
+    date!: Date;
+
+    @ManyToOne(() => User, user => user.userId, { cascade: true })
+    sender: User;
 
     @CreateDateColumn()
     createdAt!: Date;

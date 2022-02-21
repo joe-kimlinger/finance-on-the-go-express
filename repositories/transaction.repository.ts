@@ -1,13 +1,11 @@
-import { getRepository, QueryFailedError, Between, MoreThanOrEqual } from "typeorm";
-import { TransactionStatus } from "../classes/transaction_status_enum";
+import { getRepository, QueryFailedError, Between, MoreThanOrEqual, Not } from "typeorm";
 import { Transaction, User } from "../models";
 
 export interface ITransactionPayload {
+    userId: User;
     sender: User;
-    receiver: User;
-    transactionDate: Date;
-    transactionAmount: number;
-    transactionStatus: TransactionStatus;
+    date: Date;
+    amount: number;
 }
 
 export const getTransactions = async (startDate: Date, endDate: Date, userId: number): Promise<Array<Transaction | QueryFailedError>> => {
@@ -15,18 +13,18 @@ export const getTransactions = async (startDate: Date, endDate: Date, userId: nu
     return transactionRepository.find({
         where: [
             { 
-                transactionDate: Between(startDate, endDate),
-                sender: {id: userId} as User,
-                transactionStatus: TransactionStatus.Completed
+                date: Between(startDate, endDate),
+                sender: {userId: userId} as User,
+                status: Not('failed')
             },
             { 
-                transactionDate: Between(startDate, endDate),
-                receiver: {id: userId} as User,
-                transactionStatus: TransactionStatus.Completed
+                date: Between(startDate, endDate),
+                UserId: {userId: userId} as User,
+                status: Not('failed')
             }
             
         ],
-        relations: ["sender", "receiver"]
+        relations: ["sender", "UserId"]
     }).catch(err => err);
 };
 
@@ -46,7 +44,7 @@ export const createTransactions = async (payload: ITransactionPayload[]): Promis
     return transactionRepository.save(saveRequests).catch(err => err);
 };
 
-export const getTransaction = async (id: number): Promise<Transaction | null | QueryFailedError> => {
+export const getTransaction = async (id: string): Promise<Transaction | null | QueryFailedError> => {
     const transactionRepository = getRepository(Transaction);
     const transaction = await transactionRepository.findOne({ id: id });
     if (!transaction) return null;

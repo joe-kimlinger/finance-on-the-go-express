@@ -25,7 +25,12 @@ router.get("/", async (req, res) => {
 
     const controller = new AnalyticsController();
     const response = await controller.getAnalytics(startDate, endDate, userId);
-    return res.send(response);
+    if (response instanceof Error){
+        return res.status(400).send(response.message);
+    }
+    else {
+        return res.send(response);
+    }
 });
 
 export default router;

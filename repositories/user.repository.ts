@@ -30,7 +30,7 @@ export const createUsers = async (payload: IUserPayload[]): Promise<User[]> => {
 
 export const getUser = async (id: number): Promise<User | null> => {
     const postRepository = getRepository(User);
-    const post = await postRepository.findOne({ id: id });
+    const post = await postRepository.findOne({ userId: id });
     if (!post) return null;
         return post;
 };

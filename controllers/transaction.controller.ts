@@ -22,6 +22,6 @@ export default class TransactionController {
     }
 
     public async getTransaction(id: string): Promise<Transaction | null | QueryFailedError> {
-        return getTransaction(Number(id));
+        return getTransaction(id);
     }
 }
