@@ -2,9 +2,7 @@ import { QueryFailedError } from "typeorm";
 import { AnalyticsSummary } from "../classes/analytics_summary";
 import { UserRelationshipSummary } from "../classes/user_relationship_summary";
 import { Transaction } from "../models";
-import {
-    getTransactions,
-} from "../repositories/transaction.repository";
+import { getTransactions } from "../repositories/transaction.repository";
 
 export default class AnalyticsController {
     public async getAnalytics(startDate: Date, endDate: Date, userId: number): Promise<AnalyticsSummary | Error> {
